@@ -17,6 +17,7 @@ use Lovata\Toolbox\Traits\Helpers\TraitCached;
  * @mixin \Eloquent
  *
  * @property integer                   $id
+ * @property integer                   $item_id
  * @property string                    $name
  * @property string                    $code
  * @property string                    $type
@@ -24,9 +25,9 @@ use Lovata\Toolbox\Traits\Helpers\TraitCached;
  * @property \October\Rain\Argon\Argon $created_at
  * @property \October\Rain\Argon\Argon $updated_at
  *
- * @method static Builder|$this groupByPeriod(string $period)
  * @method static Builder|$this increments()
  * @method static Builder|$this decrements()
+ * @method static Builder|$this groupByPeriod(string $period)
  * @method static Builder|$this whereType(string $sType)
  */
 class Stat extends Model
@@ -66,13 +67,17 @@ class Stat extends Model
     public $fillable = [
         'name',
         'code',
+        'value',
+        'item_id',
     ];
 
     /** @var array */
     public $cached = [
         'id',
+        'item_id',
         'name',
         'code',
+        'value',
     ];
 
     /** @var array */
@@ -85,11 +90,12 @@ class Stat extends Model
         'value' => 'integer',
     ];
 
-    public function scopeGroupByPeriod(Builder $query, string $period): void
+    public function scopeGroupByPeriod(Builder $query, string $period): Builder
     {
         $periodGroupBy = static::getPeriodDateFormat($period);
 
-        $query->groupByRaw($periodGroupBy)->selectRaw("{$periodGroupBy} as period");
+        return $query->groupByRaw($periodGroupBy)
+            ->selectRaw("{$periodGroupBy} as period");
     }
 
     public static function getPeriodDateFormat(string $period): string
@@ -104,7 +110,7 @@ class Stat extends Model
                 break;
             case 'week':
                 $sResponse = "yearweek(created_at, 3)"; // see https://stackoverflow.com/questions/15562270/php-datew-vs-mysql-yearweeknow
-            break;
+                break;
             case 'day':
                 $sResponse = "date_format(created_at,'%Y-%m-%d')";
                 break;
@@ -119,13 +125,13 @@ class Stat extends Model
         return $sResponse;
     }
 
-    public function scopeIncrements(Builder $query): void
+    public function scopeIncrements(Builder $query): Builder
     {
-        $query->where('value', '>', 0);
+        return $query->where('value', '>', 0);
     }
 
-    public function scopeDecrements(Builder $query): void
+    public function scopeDecrements(Builder $query): Builder
     {
-        $query->where('value', '<', 0);
+        return $query->where('value', '<', 0);
     }
 }

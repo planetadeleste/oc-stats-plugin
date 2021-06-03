@@ -1,3 +1,6 @@
 1.0.0:
     - 'Init plugin'
     - 'v1.0.0/create_table_stats.php'
+1.0.1:
+    - 'Add item_id column'
+    - 'v1.0.1/update_table_stats.php'

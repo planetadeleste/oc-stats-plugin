@@ -11,7 +11,7 @@ use PlanetaDelEste\Stats\Models\Stat;
  */
 class StatsQuery
 {
-    /** @var Base */
+    /** @var StatsBase */
     protected $statistic;
 
     /** @var string */
@@ -278,7 +278,7 @@ class StatsQuery
         return $startValue + $differenceSinceSet;
     }
 
-    public function getStatistic(): Base
+    public function getStatistic(): StatsBase
     {
         return $this->statistic;
     }
