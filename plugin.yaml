@@ -1,0 +1,8 @@
+plugin:
+    name: 'planetadeleste.stats::lang.plugin.name'
+    description: 'planetadeleste.stats::lang.plugin.description'
+    author: PlanetaDelEste
+    icon: icon-smile-o
+    homepage: ''
+navigation:
+permissions:

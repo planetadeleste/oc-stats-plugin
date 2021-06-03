@@ -1,0 +1,30 @@
+{
+    "name":"planetadeleste/oc-stats-plugin",
+    "description":"Easily track application stats like orders, subscriptions and users and their change over time",
+    "type":"october-plugin",
+    "license":"MIT",
+    "keywords":[
+        "october",
+        "stats",
+        "track"
+    ],
+    "authors":[
+        {
+            "name":"Alvaro Canepa",
+            "email":"bfpdevel@gmail.com",
+            "role":"creator"
+        }
+    ],
+    "autoload":{
+        "psr-4":{
+            "PlanetaDelEste\\Stats\\":""
+        }
+    },
+    "extra":{
+        "installer-name":"stats"
+    },
+    "require":{
+        "php":">=7.2",
+        "planetadeleste/oc-apitoolbox-plugin":"^1.0"
+    }
+}
