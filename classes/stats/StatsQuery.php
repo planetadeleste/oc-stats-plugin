@@ -26,9 +26,14 @@ class StatsQuery
     /** @var string */
     protected $code;
 
+    /**
+     * StatsQuery constructor.
+     *
+     * @param string|StatsBase $statistic
+     */
     public function __construct(string $statistic)
     {
-        $this->statistic = new $statistic();
+        $this->statistic = $statistic::instance();
         $this->period = 'week';
         $this->start = now()->subMonth();
         $this->end = now();
@@ -219,7 +224,10 @@ class StatsQuery
         return $obQuery;
     }
 
-    protected function getDifferencesPerPeriod(): Builder
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection|\October\Rain\Database\Builder[]|\PlanetaDelEste\Stats\Models\Stat[]
+     */
+    protected function getDifferencesPerPeriod()
     {
         return $this->queryStats()
             ->whereType(Stat::TYPE_CHANGE)
@@ -233,13 +241,17 @@ class StatsQuery
             ->keyBy('period');
     }
 
-    protected function getLatestSetPerPeriod(): Builder
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Query\Builder[]|\Illuminate\Support\Collection|\October\Rain\Database\Builder[]|\PlanetaDelEste\Stats\Models\Stat[]
+     */
+    protected function getLatestSetPerPeriod()
     {
         $periodDateFormat = Stat::getPeriodDateFormat($this->period);
+        $sTable = (new Stat)->table;
 
         $rankedSets = $this->queryStats()
             ->selectRaw(
-                "ROW_NUMBER() OVER (PARTITION BY {$periodDateFormat} ORDER BY `id` DESC) AS rn, `stats_events`.*, {$periodDateFormat} as period"
+                "ROW_NUMBER() OVER (PARTITION BY {$periodDateFormat} ORDER BY `id` DESC) AS rn, `{$sTable}`.*, {$periodDateFormat} as period"
             )
             ->whereType(Stat::TYPE_SET)
             ->where('created_at', '>=', $this->start)
