@@ -4,3 +4,6 @@
 1.0.1:
     - 'Add item_id column'
     - 'v1.0.1/update_table_stats.php'
+1.0.2:
+    - 'Add user_id column'
+    - 'v1.0.2/update_stats_add_user_id.php'

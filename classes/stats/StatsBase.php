@@ -1,6 +1,7 @@
 <?php namespace PlanetaDelEste\Stats\Classes\Stats;
 
 use Carbon\Carbon;
+use Lovata\Buddies\Models\User;
 use Model;
 use October\Rain\Support\Traits\Singleton;
 use PlanetaDelEste\Stats\Models\Stat;
@@ -20,6 +21,12 @@ abstract class StatsBase
 
     /** @var Model */
     protected $obElement;
+
+    /** @var \Lovata\Buddies\Models\User|int */
+    protected $obUser;
+
+    /** @var bool */
+    protected $bUpdate = false;
 
     public static function query(): StatsQuery
     {
@@ -71,16 +78,20 @@ abstract class StatsBase
 
     protected function createEvent($type, $value, ?Carbon $timestamp = null): Stat
     {
-        return Stat::create(
-            [
-                'name'       => $this->getName(),
-                'code'       => $this->getCode(),
-                'item_id'    => $this->getItemId(),
-                'type'       => $type,
-                'value'      => $value,
-                'created_at' => $timestamp ?? now(),
-            ]
-        );
+        $arSearch = [
+            'name'       => $this->getName(),
+            'item_id'    => $this->getItemId(),
+        ];
+        $arAttrs = [
+            'code'       => $this->getCode(),
+            'user_id'    => $this->getUserId(),
+            'type'       => $type,
+            'value'      => $value,
+            'created_at' => $timestamp ?? now(),
+        ];
+        return $this->bUpdate
+            ? Stat::updateOrCreate($arSearch, $arAttrs)
+            : Stat::create($arSearch + $arAttrs);
     }
 
     public function getName(): string
@@ -99,6 +110,14 @@ abstract class StatsBase
     }
 
     /**
+     * @return int|null
+     */
+    public function getUserId(): ?int
+    {
+        return $this->obUser && is_a($this->obUser, User::class) ? $this->obUser->id : $this->obUser;
+    }
+
+    /**
      * @param null|Model $obModel
      *
      * @return $this|Model
@@ -112,6 +131,34 @@ abstract class StatsBase
         }
 
         return $this->obElement;
+    }
+
+    /**
+     * @param \Lovata\Buddies\Models\User|null $obUser
+     *
+     * @return int|\Lovata\Buddies\Models\User|$this
+     */
+    public function user(User $obUser = null)
+    {
+        if (!$obUser) {
+            return $this->obUser;
+        }
+
+        $this->obUser = $obUser;
+
+        return $this;
+    }
+
+    /**
+     * @param bool $bUpdate
+     *
+     * @return $this
+     */
+    public function update(bool $bUpdate = true): self
+    {
+        $this->bUpdate = $bUpdate;
+
+        return $this;
     }
 
     /**

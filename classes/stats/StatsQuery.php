@@ -26,6 +26,9 @@ class StatsQuery
     /** @var string */
     protected $code;
 
+    /** @var int */
+    protected $iUserID;
+
     /**
      * StatsQuery constructor.
      *
@@ -86,6 +89,13 @@ class StatsQuery
         return $this;
     }
 
+    public function byUser(int $iUserID): self
+    {
+        $this->iUserID = $iUserID;
+
+        return $this;
+    }
+
     /**
      * @param Carbon $start
      *
@@ -124,6 +134,7 @@ class StatsQuery
         $differencesPerPeriod = $this->getDifferencesPerPeriod();
         $latestSetPerPeriod = $this->getLatestSetPerPeriod();
         $lastPeriodValue = $this->getValue($this->start);
+        $codeCounter = $this->getCountByCode($this->code);
 
         return $periods->map(
             function (array $periodBoundaries) use (
@@ -131,7 +142,8 @@ class StatsQuery
                 $changes,
                 $differencesPerPeriod,
                 &
-                $lastPeriodValue
+                $lastPeriodValue,
+                $codeCounter
             ) {
                 [$periodStart, $periodEnd, $periodKey] = $periodBoundaries;
                 $setEvent = $latestSetPerPeriod->where('period', $periodKey)->first();
@@ -153,6 +165,7 @@ class StatsQuery
                 $obDataPoint->increments = (int)($differencesPerPeriod[$periodKey]['increments'] ?? 0);
                 $obDataPoint->decrements = (int)($differencesPerPeriod[$periodKey]['decrements'] ?? 0);
                 $obDataPoint->difference = (int)($differencesPerPeriod[$periodKey]['difference'] ?? 0);
+                $obDataPoint->count = $codeCounter;
 
                 return $obDataPoint;
             }
@@ -214,11 +227,16 @@ class StatsQuery
      */
     protected function queryStats()
     {
+        /** @var Stat|Builder $obQuery */
         $obQuery = Stat::query()
             ->where('name', $this->statistic->getName());
 
         if ($this->code) {
             $obQuery->where('code', $this->code);
+        }
+
+        if ($this->iUserID) {
+            $obQuery->getByUser($this->iUserID);
         }
 
         return $obQuery;
@@ -288,6 +306,24 @@ class StatsQuery
             ->sum('value');
 
         return $startValue + $differenceSinceSet;
+    }
+
+    /**
+     * @param string|null $sCode
+     *
+     * @return int
+     */
+    public function getCountByCode(string $sCode = null): int
+    {
+        $obQuery = $this->queryStats()
+            ->where('created_at', '>=', $this->start)
+            ->where('created_at', '<', $this->end);
+
+        if ($sCode) {
+            $obQuery->where('code', $sCode);
+        }
+
+        return $obQuery->count();
     }
 
     public function getStatistic(): StatsBase

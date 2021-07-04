@@ -1,10 +1,12 @@
 <?php namespace PlanetaDelEste\Stats\Models;
 
+use Lovata\Buddies\Models\User;
 use Model;
 use Kharanenka\Scope\NameField;
 use Kharanenka\Scope\TypeField;
 use Kharanenka\Scope\CodeField;
 use October\Rain\Database\Builder;
+use October\Rain\Database\Relations\BelongsTo;
 use October\Rain\Database\Traits\Validation;
 use Lovata\Toolbox\Traits\Helpers\TraitCached;
 
@@ -18,6 +20,7 @@ use Lovata\Toolbox\Traits\Helpers\TraitCached;
  *
  * @property integer                   $id
  * @property integer                   $item_id
+ * @property integer                   $user_id
  * @property string                    $name
  * @property string                    $code
  * @property string                    $type
@@ -25,10 +28,15 @@ use Lovata\Toolbox\Traits\Helpers\TraitCached;
  * @property \October\Rain\Argon\Argon $created_at
  * @property \October\Rain\Argon\Argon $updated_at
  *
+ * @property-read User                 $user
+ * @method static BelongsTo|User user()
+ *
  * @method static Builder|$this increments()
  * @method static Builder|$this decrements()
  * @method static Builder|$this groupByPeriod(string $period)
  * @method static Builder|$this whereType(string $sType)
+ * @method static Builder|$this getByItem(int $iItemID)
+ * @method static Builder|$this getByUser(int|User $obUser)
  */
 class Stat extends Model
 {
@@ -63,29 +71,39 @@ class Stat extends Model
     /** @var array */
     public $jsonable = [];
 
-    /** @var array */
+    /** @var string[] */
     public $fillable = [
         'name',
         'code',
+        'type',
         'value',
         'item_id',
+        'user_id',
     ];
 
-    /** @var array */
+    /** @var string[] */
     public $cached = [
         'id',
         'item_id',
+        'user_id',
         'name',
         'code',
         'value',
+        'type',
     ];
 
-    /** @var array */
+    /** @var string[] */
     public $dates = [
         'created_at',
         'updated_at',
     ];
 
+    /** @var array */
+    public $belongsTo = [
+        'user' => [User::class]
+    ];
+
+    /** @var string[] */
     protected $casts = [
         'value' => 'integer',
     ];
@@ -133,5 +151,22 @@ class Stat extends Model
     public function scopeDecrements(Builder $query): Builder
     {
         return $query->where('value', '<', 0);
+    }
+
+    public function scopeGetByItem(Builder $obQuery, int $iItemID): Builder
+    {
+        return $obQuery->where('item_id', $iItemID);
+    }
+
+    /**
+     * @param \October\Rain\Database\Builder $obQuery
+     * @param User|int                       $obUser
+     *
+     * @return \October\Rain\Database\Builder
+     */
+    public function scopeGetByUser(Builder $obQuery, $obUser): Builder
+    {
+        $iUserID = is_a($obUser, User::class) ? $obUser->id : $obUser;
+        return $obQuery->where('user_id', $iUserID);
     }
 }

@@ -27,6 +27,9 @@ class DataPoint implements Arrayable
     /** @var int */
     public $difference;
 
+    /** @var int */
+    public $count;
+
     /**
      * @return array
      */
